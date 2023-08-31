@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <title>Hamilton Homes</title>
+    <style>
+      #map {
+      height: 600px;
+      width: 100%;
+      }
+      .btn-primary {
+        border: yellowgreen;
+        background-color: indianred;
+      }
+
+    </style>
+  </head>
+  <body>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+  <a class="navbar-brand" href="#">Refuhope Hamilton Project</a>
+ </div>
+ </nav>
+
+<header class = "container text-center">
+  <div class = "row mt-3 mb-3 g-3"> 
+    <div class = "col" >
+    <button type="button" id = "geolocate" class="btn btn-primary">Geolocate</button>
+    </div>
+    <div class = "col">
+    <button type="button" id= "hospitals"class="btn btn-primary">Hospitals</button>
+    </div>
+    <div class = "col">
+    <button type="button" id = "fireStations" class="btn btn-primary">Fire Stations</button>
+    </div>
+    <div class = "col">
+    <button type="button" class="btn btn-primary" id = "schools">Schools</button>
+    </div>
+    <div class = "col">
+    <button type="button" class="btn btn-primary" id = "waterfalls">Waterfalls</button>
+    </div>
+    <div class = "col">
+    <button type="button" class="btn btn-secondary" id="clear" >Clear</button>
+    </div>
+  </div>
+  <div class = "row">
+    <div id ="map"></div>
+  </div>
+  <div class = "row" id = "output"> </div>
+</header>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIU-UJB4YkPh50UN_naTNIFNzJDtTZZLU&callback=initMap&v=weekly" async></script>
+<script src="City_Waterfalls.js"></script>
+<script src="Educational_Institutions.js"></script>
+<script src="Fire_Stations.js"></script>
+<script src="Hospitals.js"></script>
+<script>
+  function initMap()
+  {
+    // Array to store markers
+    let markers = [];
+
+    // Initially start the map at 64 Melrose Ave 
+    let map = new google.maps.Map(document.getElementById("map"), 
+                              {
+                              center: { lat:  43.2516587, lng: -79.8318171},
+                              zoom: 12,
+                              });
+
+    let marker = new google.maps.Marker({
+      position: { lat: 43.2516587, lng: -79.8318171},
+      map: map,
+    });
+
+    marker.category = "Initial Location";
+    markers.push(marker);
+
+    let infowindow = new google.maps.InfoWindow();
+  
+
+    // Function to be called when Geolocation button is pressed
+    function getLocation()
+    {
+      console.log("geolocation got called");
+      if (navigator.geolocation)
+      {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+        console.log("I am here in geee");
+      }
+      
+      else
+      {
+        console.log("i am here in error");
+        $("#output").html('<div id = "temp" class="alert alert-danger mt-3' + 'role="alert">' + 'Your broweser does not support geolocation'+ '</div>');
+        clearTemp();
+      }
+    }
+    
+      
+    function showPosition(position){
+      let lat = position.coords.latitude;
+      let lng = position.coords.longitude;
+      let currentPosition = new google.maps.LatLng(lat,lng);
+      
+      let currentPositionMarker = new google.maps.Marker({
+        position: currentPosition,
+        icon: "green_MarkerA.png",
+        map: map,
+        });
+
+      currentPositionMarker.content = "Current Position";
+      currentPositionMarker.category = "Current Position";
+
+      currentPositionMarker.addListener("click", marker_clicked);
+      map.setCenter(currentPosition);
+      currentPositionMarker.setMap(map);
+      markers.push(currentPositionMarker);
+    }
+
+    function showError(error){
+      console.log(error.code);
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          $("#output").html('<div id = "temp" class="alert alert-danger mt-3' + 'role="alert">' + 'Permission denied from user.'+ '</div>');
+          break;
+        case error.POSITION_UNAVAILABLE:
+          $("#output").html('<div id = "temp" class="alert alert-danger mt-3' + 'role="alert">' + 'Unable to retrieve location/'+ '</div>');
+          break;
+        case error.TIMEOUT:
+          $("#output").html('<div id = "temp" class="alert alert-danger mt-3' + 'role="alert">' + 'Time out.'+ '</div>');
+          break;
+        case error.UNKNOWN_ERROR:
+          $("#output").html('<div id = "temp" class="alert alert-danger mt-3' + 'role="alert">' + 'An unknown error occured.'+ '</div>');
+          break;
+      }
+      clearTemp();
+    }
+
+    // Load all JSON files into markers array
+    // Iterate over the hospitals listed
+    for(let i = 0; i < hospitals.features.length; i++){
+      let new_marker = new google.maps.Marker({ 
+          position: {lat: parseFloat(hospitals.features[i].properties.LATITUDE), 
+                     lng: parseFloat(hospitals.features[i].properties.LONGITUDE)},
+          title: hospitals.features[i].properties.NAME
+        });
+
+      new_marker.content = hospitals.features[i].properties.NAME;
+      new_marker.category = "hospitals";
+      new_marker.addListener("click", marker_clicked);
+
+      markers.push(new_marker);
+    }
+
+    // Iterate over the fireStations listed
+    for(let i = 0; i < fireStations.features.length; i++){
+      let new_marker = new google.maps.Marker({ 
+          position: {lat: parseFloat(fireStations.features[i].properties.LATITUDE), 
+                     lng: parseFloat(fireStations.features[i].properties.LONGITUDE)},
+          title: fireStations.features[i].properties.NAME
+        });
+
+      new_marker.content = fireStations.features[i].properties.NAME;
+      new_marker.category = "fireStations";
+      new_marker.addListener("click", marker_clicked);
+
+      markers.push(new_marker);
+    }
+
+    // Iterate over the schools listed
+    for(let i = 0; i < schools.features.length; i++){
+      let new_marker = new google.maps.Marker({ 
+          position: {lat: parseFloat(schools.features[i].properties.LATITUDE), 
+                     lng: parseFloat(schools.features[i].properties.LONGITUDE)},
+          title: schools.features[i].properties.NAME
+        });
+
+      new_marker.content = schools.features[i].properties.NAME;
+      new_marker.category = "schools";
+      new_marker.addListener("click", marker_clicked);
+
+      markers.push(new_marker);
+    }
+
+    // Iterate over the waterfalls listed
+    for(let i = 0; i < waterfalls.features.length; i++){
+      let new_marker = new google.maps.Marker({ 
+          position: {lat: parseFloat(waterfalls.features[i].properties.LATITUDE), 
+                     lng: parseFloat(waterfalls.features[i].properties.LONGITUDE)},
+          title: waterfalls.features[i].properties.NAME
+        });
+
+      new_marker.content = waterfalls.features[i].properties.NAME;
+      new_marker.category = "waterfalls";
+      new_marker.addListener("click", marker_clicked);
+
+      markers.push(new_marker);
+    }
+
+
+    // Show all hospitals in hamilton
+    function hospitals_func(){
+      // First relocate map over hamilton
+      map.setCenter(markers[0].getPosition());
+
+      // Iterate over markers arr
+      for (let i = 0; i < markers.length; i++)
+        {
+          if (markers[i].category == "hospitals") markers[i].setMap(map);
+          else markers[i].setMap(null);
+        }
+
+    }
+
+    // Show all fire stations in Hamilton
+    function fireStations_func(){
+      // First relocate map over hamilton
+      map.setCenter(markers[0].getPosition());
+
+      // Iterate over markers arr
+      for (let i = 0; i < markers.length; i++)
+        {
+          if (markers[i].category == "fireStations") markers[i].setMap(map);
+          else markers[i].setMap(null);
+        }
+
+    }
+
+    // Show all schools in Hamilton
+    function schools_func(){
+
+      // First relocate map over hamilton
+      map.setCenter(markers[0].getPosition());
+
+      // Iterate over markers arr
+      for (let i = 0; i < markers.length; i++)
+        {
+          if (markers[i].category == "schools") markers[i].setMap(map);
+          else markers[i].setMap(null);
+        }
+
+    }
+
+    // Show all Waterfalls in Hamilton
+    function waterfalls_func(){
+
+      // First relocate map over hamilton
+      map.setCenter(markers[0].getPosition());
+
+      // Iterate over markers arr
+      for (let i = 0; i < markers.length; i++)
+        {
+          if (markers[i].category == "waterfalls") markers[i].setMap(map);
+          else markers[i].setMap(null);
+        }
+
+    }
+
+    // Clear all markers from google maops
+    function clear_func(){
+
+      // First relocate map over hamilton
+      map.setCenter(markers[0].getPosition());
+
+      // Iterate over markers arr
+      for (let i = 0; i < markers.length; i++)
+        {
+          markers[i].setMap(null);
+        }
+
+
+    }
+
+    // function to clear errors by removing 'Temp' div
+    function clearTemp(){
+      const myTimeout = setTimeout(clearError, 5000);
+
+      function clearError(){
+        $("#temp").remove();
+      }
+    }
+
+    // Event listener if geolocation button is clicked
+    $("#geolocate").click(getLocation);
+
+    // Event listener if geolocation button is clicked
+    $("#hospitals").click(hospitals_func);
+
+    // Event listener if geolocation button is clicked
+    $("#fireStations").click(fireStations_func);
+
+    // Event listener if geolocation button is clicked
+    $("#schools").click(schools_func);
+
+    // Event listener if geolocation button is clicked
+    $("#waterfalls").click(waterfalls_func);
+
+    // Event listener if geolocation button is clicked
+    $("#clear").click(clear_func);
+
+
+    // Event listener to showcase contents of the marker
+    function marker_clicked(){
+      infowindow.close();
+      infowindow.setContent(this.content);
+      infowindow.open(map, this);
+    };
+  }
+
+
+  
+
+  
+  
+</script>
+
+
+  </body>
+</html>
