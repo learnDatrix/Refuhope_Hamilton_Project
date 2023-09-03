@@ -35,6 +35,8 @@ The "Clear" button is a handy tool for removing any markers or indicators curren
 
 ## How to Use
 
+![Picture of intro](/screenshots/maps_image.png)
+
 Simply click on the desired button to activate the corresponding feature. The map will update accordingly, showing the requested information. Use the "Clear" button to reset the map as needed.
 
 Feel free to explore and interact with the map to discover valuable information about Hamilton's key points of interest.
